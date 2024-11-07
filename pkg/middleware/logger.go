@@ -12,10 +12,9 @@ func LoggerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
 		userID := c.Request.Header.Get(constants.UserID)
-		// Process the request
+
 		c.Next()
 
-		// Log the request and response details
 		end := time.Now()
 		latency := end.Sub(start)
 

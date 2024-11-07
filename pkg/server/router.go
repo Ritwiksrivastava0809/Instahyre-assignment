@@ -6,6 +6,7 @@ import (
 	"spam-search/pkg/config"
 	"spam-search/pkg/constants"
 	errorlogs "spam-search/pkg/constants/errorlogs"
+	spamReportsController "spam-search/pkg/controller/spamReports"
 	userController "spam-search/pkg/controller/users"
 	"spam-search/pkg/middleware"
 	"spam-search/pkg/token"
@@ -34,7 +35,6 @@ func NewRounter(dbConnection *gorm.DB) (*gin.Engine, error) {
 
 	router.Use(gin.Logger())
 	router.Use(gin.Recovery())
-	//TODO : apply logger middleware
 
 	corsConfig := cors.DefaultConfig()
 	router.Use(middleware.LoggerMiddleware())
@@ -45,7 +45,7 @@ func NewRounter(dbConnection *gorm.DB) (*gin.Engine, error) {
 
 	router.Use(cors.New(corsConfig))
 
-	// authMiddleWare := middleware.AuthTokenMiddleware(tokenMaker)
+	authMiddleWare := middleware.AuthTokenMiddleware(tokenMaker)
 
 	v1 := router.Group("/v1")
 	{
@@ -54,6 +54,15 @@ func NewRounter(dbConnection *gorm.DB) (*gin.Engine, error) {
 			userController := new(userController.UserController)
 			userGroup.POST("/create", userController.CreateUserHandler)
 			userGroup.POST("/login", userController.LoginUserHandler)
+		}
+
+		spamGroup := v1.Group("/spam")
+		spamGroup.Use(authMiddleWare)
+		{
+			spamController := new(spamReportsController.SpamReportsController)
+			spamGroup.POST("/report", spamController.ReportSpamHandler)
+			spamGroup.GET("/search/name", spamController.SearchNameHandler)
+			spamGroup.GET("/search/phone", spamController.SearchPhoneHandler)
 		}
 	}
 

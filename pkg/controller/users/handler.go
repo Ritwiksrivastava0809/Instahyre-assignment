@@ -18,14 +18,12 @@ import (
 func (con *UserController) CreateUserHandler(c *gin.Context) {
 	var user users.User
 
-	// Bind the incoming JSON data to the user struct
 	if err := c.ShouldBindJSON(&user); err != nil {
 		log.Error().Msgf(errorlogs.BindingJsonError, err.Error())
 		c.JSON(http.StatusBadRequest, gin.H{"message": errorlogs.BindingJsonError})
 		return
 	}
 
-	// Validate the email format if provided
 	if user.Email != "" {
 		if _, err := mail.ParseAddress(user.Email); err != nil {
 			log.Error().Msg(errorlogs.InvalidEmailFormatError)
@@ -34,7 +32,6 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		}
 	}
 
-	// Get the DB connection
 	db := c.MustGet(constants.ConstantDb).(*gorm.DB)
 	if db.Error != nil {
 		message := fmt.Sprintf(errorlogs.GetDBError, db.Error)
@@ -43,7 +40,6 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Start a transaction to ensure atomicity
 	tx := db.Begin()
 	if tx.Error != nil {
 		message := fmt.Sprintf(errorlogs.BeginSQLTransactionError, tx.Error)
@@ -52,10 +48,8 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Defer rollback in case of errors
 	defer tx.Rollback()
 
-	// Check if the user already exists by email or phone number
 	exists, err := user.UserExists(tx)
 	if err != nil {
 		tx.Rollback()
@@ -69,7 +63,6 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Hash the password before storing it
 	hashedPassword, err := utils.HashPasswordArgon2(user.PasswordHash)
 	if err != nil {
 		tx.Rollback()
@@ -78,10 +71,8 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Set the hashed password to user
 	user.PasswordHash = hashedPassword
 
-	// Insert the user into the database
 	if err := user.CreateUser(tx); err != nil {
 		tx.Rollback()
 		log.Error().Msg(errorlogs.InsertUserError + err.Error())
@@ -89,7 +80,6 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		message := fmt.Sprintf(errorlogs.CommitSQLTransactionError, constants.UserTable, err)
 		log.Error().Msg("Error while commiting transaction to create user. " + message)
@@ -97,7 +87,6 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
 }
 
@@ -111,7 +100,6 @@ func (con *UserController) LoginUserHandler(c *gin.Context) {
 
 	dB := c.MustGet(constants.ConstantDb).(*gorm.DB)
 
-	// Start a transaction
 	tx := dB.Begin()
 	if tx.Error != nil {
 		log.Error().Msgf(errorlogs.BeginSQLTransactionError, tx.Error)
@@ -119,10 +107,8 @@ func (con *UserController) LoginUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Defer rollback in case of errors
 	defer tx.Rollback()
 
-	// Get the user by phone number
 	user, err := users.GetUserByPhoneNumber(tx, login.PhoneNumber)
 	if err != nil {
 		tx.Rollback()
@@ -138,7 +124,6 @@ func (con *UserController) LoginUserHandler(c *gin.Context) {
 		return
 	}
 
-	// Commit the transaction
 	if err := tx.Commit().Error; err != nil {
 		message := fmt.Sprintf(errorlogs.CommitSQLTransactionError, constants.UserTable, err)
 		log.Error().Msg("Error while commiting transaction to create user. " + message)
@@ -155,6 +140,7 @@ func (con *UserController) LoginUserHandler(c *gin.Context) {
 
 	accessToken, err := token.CreateToken(
 		login.PhoneNumber,
+		user.ID,
 		utils.GetAccessTokenDuration(),
 	)
 	if err != nil {
@@ -168,5 +154,4 @@ func (con *UserController) LoginUserHandler(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "login successful", "response": resp})
-
 }

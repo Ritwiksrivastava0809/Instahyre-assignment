@@ -34,5 +34,8 @@ func (s *sqlConnection) GetDatabse() *gorm.DB {
 func (s *sqlConnection) Migrate(development bool) {
 	s.connection.AutoMigrate(&users.User{})
 	s.connection.AutoMigrate(&contacts.Contact{})
-	s.connection.AutoMigrate(&spamreports.SpamReport{})
+	s.connection.AutoMigrate(&spamreports.GlobalSpam{})
+
+	s.connection.Exec("ALTER TABLE global_spam MODIFY COLUMN phone_number VARCHAR(15) NOT NULL;")
+
 }

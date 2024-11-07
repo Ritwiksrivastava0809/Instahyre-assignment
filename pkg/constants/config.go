@@ -14,6 +14,7 @@ const (
 	UserTable    = "users"
 	ConactsTable = "contacts"
 	SpamReport   = "spam_reports"
+	GlobalSpam   = "global_spam"
 )
 
 // env related constants
@@ -37,4 +38,11 @@ const (
 	Bearer                  = "Bearer"
 	UserID                  = "userID"
 	AuthorizationPayloadKey = "authorization_payload"
+	Pending                 = "pending"
+	Approved                = "approved"
+	Spam                    = "spam"
+	Name                    = "name"
+	PhoneNumber             = "phone_number"
+	Email                   = "email"
+	SpamLikelihood          = "spam_likelihood"
 )
