@@ -14,4 +14,6 @@ const (
 	HashedPasswordError       = "got error while hashing the password. error :: %v"
 	InsertUserError           = "got error while inserting the user. error :: %s"
 	CommitSQLTransactionError = "got error while committing the transaction for table %s. error :: %s"
+	GetUserByPhoneNumberError = "got error while getting the user with phone number %s. error :: %s"
+	TokenError                = "got error while generating the token. error :: %s"
 )

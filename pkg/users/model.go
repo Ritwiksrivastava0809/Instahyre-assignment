@@ -18,3 +18,12 @@ type User struct {
 func (User) TableName() string {
 	return constants.UserTable
 }
+
+type LoginUserRequest struct {
+	PhoneNumber string `json:"phone_number" binding:"required"`
+	Password    string `json:"password" binding:"required"`
+}
+
+type LoginUserResponse struct {
+	AccessToken string `json:"access_token"`
+}

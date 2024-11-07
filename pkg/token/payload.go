@@ -8,17 +8,17 @@ import (
 	"github.com/google/uuid"
 )
 
-func NewPayload(userID uint, duration time.Duration) (*Payload, error) {
+func NewPayload(phoneNumber string, duration time.Duration) (*Payload, error) {
 	token, err := uuid.NewRandom()
 	if err != nil {
 		return nil, err
 	}
 
 	Payload := &Payload{
-		ID:        token,
-		UserID:    userID,
-		IssuedAt:  time.Now(),
-		ExpiredAt: time.Now().Add(duration),
+		ID:          token,
+		PhoneNumber: phoneNumber,
+		IssuedAt:    time.Now(),
+		ExpiredAt:   time.Now().Add(duration),
 	}
 
 	return Payload, nil

@@ -31,9 +31,10 @@ const (
 
 // handler related constants
 const (
-	MinSecretKeyLen = 32
-	TokenMaker      = "tokenMaker"
-	ConstantPayload = "payload"
-	Bearer          = "Bearer"
-	UserID          = "userID"
+	MinSecretKeyLen         = 32
+	TokenMaker              = "tokenMaker"
+	ConstantPayload         = "payload"
+	Bearer                  = "Bearer"
+	UserID                  = "userID"
+	AuthorizationPayloadKey = "authorization_payload"
 )

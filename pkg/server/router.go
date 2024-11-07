@@ -1,22 +1,35 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
+	"spam-search/pkg/config"
 	"spam-search/pkg/constants"
+	errorlogs "spam-search/pkg/constants/errorlogs"
 	userController "spam-search/pkg/controller/users"
 	"spam-search/pkg/middleware"
+	"spam-search/pkg/token"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-func NewRounter(dbConnection *gorm.DB) *gin.Engine {
+type Token struct {
+	tokenMaker token.Maker
+}
+
+func NewRounter(dbConnection *gorm.DB) (*gin.Engine, error) {
+	tokenMaker, err := token.NewJWTMAKER(config.GetSymmetricKey())
+	if err != nil {
+		return nil, fmt.Errorf(errorlogs.TokenError, err)
+	}
 
 	router := gin.New()
 
 	router.Use(func(c *gin.Context) {
 		c.Set(constants.ConstantDb, dbConnection)
+		c.Set(constants.TokenMaker, tokenMaker)
 	})
 
 	router.Use(gin.Logger())
@@ -32,15 +45,17 @@ func NewRounter(dbConnection *gorm.DB) *gin.Engine {
 
 	router.Use(cors.New(corsConfig))
 
+	// authMiddleWare := middleware.AuthTokenMiddleware(tokenMaker)
+
 	v1 := router.Group("/v1")
 	{
 		userGroup := v1.Group("/users")
 		{
 			userController := new(userController.UserController)
 			userGroup.POST("/create", userController.CreateUserHandler)
-			// userGroup.POST("/login", userController.LoginUserHandler)
+			userGroup.POST("/login", userController.LoginUserHandler)
 		}
 	}
 
-	return router
+	return router, nil
 }

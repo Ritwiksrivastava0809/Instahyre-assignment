@@ -6,6 +6,7 @@ import (
 	"net/mail"
 	"spam-search/pkg/constants"
 	errorlogs "spam-search/pkg/constants/errorlogs"
+	"spam-search/pkg/token"
 	"spam-search/pkg/users"
 	"spam-search/pkg/utils"
 
@@ -98,4 +99,74 @@ func (con *UserController) CreateUserHandler(c *gin.Context) {
 
 	// Return success response
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully"})
+}
+
+func (con *UserController) LoginUserHandler(c *gin.Context) {
+	var login users.LoginUserRequest
+	if err := c.ShouldBindJSON(&login); err != nil {
+		log.Error().Msg(errorlogs.BindingJsonError)
+		c.JSON(http.StatusBadRequest, gin.H{"error": errorlogs.BindingJsonError})
+		return
+	}
+
+	dB := c.MustGet(constants.ConstantDb).(*gorm.DB)
+
+	// Start a transaction
+	tx := dB.Begin()
+	if tx.Error != nil {
+		log.Error().Msgf(errorlogs.BeginSQLTransactionError, tx.Error)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorlogs.BeginSQLTransactionError})
+		return
+	}
+
+	// Defer rollback in case of errors
+	defer tx.Rollback()
+
+	// Get the user by phone number
+	user, err := users.GetUserByPhoneNumber(tx, login.PhoneNumber)
+	if err != nil {
+		tx.Rollback()
+		log.Error().Msgf(errorlogs.GetUserByPhoneNumberError, login.PhoneNumber, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": errorlogs.GetUserByPhoneNumberError})
+		return
+	}
+
+	if err = utils.VerifyPassword(user.PasswordHash, login.Password); err != nil {
+		tx.Rollback()
+		log.Error().Msg("Invalid password")
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid password"})
+		return
+	}
+
+	// Commit the transaction
+	if err := tx.Commit().Error; err != nil {
+		message := fmt.Sprintf(errorlogs.CommitSQLTransactionError, constants.UserTable, err)
+		log.Error().Msg("Error while commiting transaction to create user. " + message)
+		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{"error": message})
+		return
+	}
+
+	token, ok := c.MustGet(constants.TokenMaker).(token.Maker)
+	if !ok {
+		log.Error().Msg("failed to retrieve token maker from context")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	accessToken, err := token.CreateToken(
+		login.PhoneNumber,
+		utils.GetAccessTokenDuration(),
+	)
+	if err != nil {
+		log.Error().Msgf(errorlogs.TokenError, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
+		return
+	}
+
+	resp := users.LoginUserResponse{
+		AccessToken: accessToken,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "login successful", "response": resp})
+
 }

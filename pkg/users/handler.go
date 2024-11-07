@@ -28,3 +28,12 @@ func (u *User) UserExists(db *gorm.DB) (bool, error) {
 	// If err is nil, a user was found, hence user exists
 	return err == nil, nil
 }
+
+func GetUserByPhoneNumber(db *gorm.DB, phoneNumber string) (User, error) {
+	var user User
+	err := db.Where("phone_number = ?", phoneNumber).First(&user).Error
+	if err != nil {
+		return user, fmt.Errorf(errorlogs.GetUserByPhoneNumberError, phoneNumber, err)
+	}
+	return user, nil
+}

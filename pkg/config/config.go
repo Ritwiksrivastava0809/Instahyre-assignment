@@ -38,3 +38,11 @@ func DBconfig() DB {
 func GetConfig() *viper.Viper {
 	return config
 }
+
+func GetSymmetricKey() string {
+	return config.GetString("token.symmetric")
+}
+
+func GetAccessTokenDuration() string {
+	return config.GetString("token.access.duration")
+}
