@@ -1,0 +1,133 @@
+Spam Search API
+This project provides a RESTful API for managing users and reporting spam. Users can create accounts, log in, report spam, and search spam reports by name or phone number.
+
+Prerequisites
+Before starting, ensure you have the following tools installed:
+
+Docker
+Docker Compose
+Go (version 1.18+)
+Project Setup
+
+Step 1: Build and Start the Application with Docker
+Use Docker Compose to set up and run the application, including its dependencies (e.g., a PostgreSQL database).
+
+bash
+Copy code
+docker-compose up --build
+This command will:
+
+Build and start the API container.
+Set up any required services (e.g., a PostgreSQL database).
+Once the containers are up, the API will be accessible at http://localhost:8080.
+
+Step 2: Run the Go Application (for Development)
+For development, you can start the application directly with Go to leverage hot-reloading and easier debugging:
+
+bash
+Copy code
+go run main.go -e development
+API Endpoints
+Base URL
+The base URL for all endpoints is:
+
+bash
+Copy code
+http://localhost:8080/api/v1
+User Endpoints
+Create a New User
+URL: /users/create
+Method: POST
+Request Body:
+json
+Copy code
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com",
+  "phone_number": "+123456789",
+  "password": "yourpassword"
+}
+Response:
+Success: 200 OK, JSON { "message": "User created successfully" }
+Error: 409 Conflict if user exists, or other error codes for validation issues.
+User Login
+URL: /users/login
+Method: POST
+Request Body:
+json
+Copy code
+{
+  "phone_number": "+123456789",
+  "password": "yourpassword"
+}
+Response:
+Success: 200 OK, JSON { "message": "login successful", "response": { "access_token": "token" } }
+Error: 401 Unauthorized for invalid credentials.
+Spam Report Endpoints (Authenticated)
+To access these endpoints, include an Authorization header with a Bearer token:
+
+makefile
+Copy code
+Authorization: Bearer <access_token>
+Report Spam
+URL: /spam/report
+Method: POST
+Request Body:
+json
+Copy code
+{
+  "name": "Spam Caller",
+  "phone_number": "+123456789",
+  "spam_likelihood": 75
+}
+Response:
+Success: 200 OK, JSON { "message": "Spam report created successfully" }
+Error: Appropriate error messages for issues in data submission.
+Search Spam by Name
+URL: /spam/search/name
+Method: GET
+Query Params: ?name=John
+Response:
+Success: 200 OK, JSON with search results.
+Error: Appropriate error messages for issues in search or token validation.
+Search Spam by Phone Number
+URL: /spam/search/phone
+Method: GET
+Query Params: ?phone_number=+123456789
+Response:
+Success: 200 OK, JSON with search results.
+Error: Appropriate error messages for issues in search or token validation.
+Code Structure
+Here’s an overview of the relevant code structure:
+
+Controllers:
+
+UserController: Manages user creation and login.
+SpamReportsController: Handles spam reporting and search functionalities.
+Middleware:
+
+AuthTokenMiddleware: Ensures requests to /spam endpoints are authenticated.
+Routes: Defined in main.go, grouped under /api/v1/users and /api/v1/spam with user and spam routes respectively.
+
+Example API Usage
+bash
+Copy code
+# Create a new user
+curl -X POST http://localhost:8080/api/v1/users/create \
+    -H "Content-Type: application/json" \
+    -d '{"name": "John Doe", "email": "john@example.com", "phone_number": "+123456789", "password": "password123"}'
+
+# User login to obtain token
+curl -X POST http://localhost:8080/api/v1/users/login \
+    -H "Content-Type: application/json" \
+    -d '{"phone_number": "+123456789", "password": "password123"}'
+
+# Report spam (Authenticated)
+curl -X POST http://localhost:8080/api/v1/spam/report \
+    -H "Authorization: Bearer <access_token>" \
+    -H "Content-Type: application/json" \
+    -d '{"name": "Spam Caller", "phone_number": "+123456789", "spam_likelihood": 80}'
+
+# Search spam by name (Authenticated)
+curl -X GET "http://localhost:8080/api/v1/spam/search/name?name=John" \
+    -H "Authorization: Bearer <access_token>"
