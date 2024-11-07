@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"spam-search/pkg/config"
+	"spam-search/pkg/users"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -26,4 +27,8 @@ func NewSQLDB() (*sqlConnection, error) {
 
 func (s *sqlConnection) GetDatabse() *gorm.DB {
 	return s.connection
+}
+
+func (s *sqlConnection) Migrate(development bool) {
+	s.connection.AutoMigrate(&users.User{})
 }

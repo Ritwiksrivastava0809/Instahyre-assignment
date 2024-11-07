@@ -30,5 +30,10 @@ func main() {
 		log.Fatal().Msg("Can't Initialize DB " + err.Error())
 		panic("Can't Initialize DB " + err.Error())
 	}
+	var developmentMode bool
+	if *environment == "development" || *environment == "local" {
+		developmentMode = true
+	}
+	dbConnection.Migrate(developmentMode)
 	server.Init(dbConnection.GetDatabse())
 }
