@@ -1,0 +1,44 @@
+version: '3.3'
+services:
+  db:
+    image: mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: 'spam-search'
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+      LANG: "C.UTF-8"
+      TZ: "UTC"
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+    networks:
+      - mysql-phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin
+    depends_on:
+      - db
+    container_name: pma
+    links:
+      - db
+    environment:
+      PMA_HOST: localhost
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      MYSQL_ROOT_PASSWORD: password
+    restart: always
+    ports:
+      - 8081:80
+    networks:
+      - mysql-phpmyadmin
+
+networks:
+  mysql-phpmyadmin:
+volumes:
+  my-db:
+  

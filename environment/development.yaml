@@ -1,0 +1,9 @@
+db:
+  username: "user"
+  password: "password"
+  url: "127.0.0.1:3306"
+  name: "spam-search"
+server:
+  host: "0.0.0.0"
+  port: 8080
+
