@@ -13,7 +13,6 @@ import (
 
 func AuthTokenMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Retrieve the Authorization header
 		tokenHeader := c.GetHeader(constants.Authorization)
 		if len(tokenHeader) == 0 {
 			log.Error().Msg("Authorization header is missing")
@@ -21,7 +20,6 @@ func AuthTokenMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		// Split the tokenHeader into fields
 		fields := strings.Fields(tokenHeader)
 		if len(fields) < 2 {
 			log.Error().Msg("Invalid authorization header format")
@@ -29,7 +27,6 @@ func AuthTokenMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		// Check if the token is prefixed with "Bearer"
 		authorizationType := strings.ToLower(fields[0])
 		if authorizationType != strings.ToLower(constants.Bearer) {
 			log.Error().Msgf("Unsupported authorization type %s", authorizationType)
@@ -37,10 +34,8 @@ func AuthTokenMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		// Extract the actual token from the header
 		accessToken := fields[1]
 
-		// Parse and verify the token
 		claims, err := tokenMaker.VerifyToken(accessToken)
 		if err != nil {
 			fmt.Println("error:: ", err)
@@ -49,10 +44,7 @@ func AuthTokenMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 			return
 		}
 
-		// Set the claims in the context for downstream use
 		c.Set(constants.AuthorizationPayloadKey, claims)
-
-		// Continue with the next middleware or handler
 		c.Next()
 	}
 }

@@ -10,7 +10,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-// NewJWTMAKER creates a new JWTMAKER
 func NewJWTMAKER(secretKey string) (Maker, error) {
 	if len(secretKey) < constants.MinSecretKeyLen {
 		return nil, fmt.Errorf(errorlogs.InvalidKeySize, constants.MinSecretKeyLen)
@@ -18,9 +17,8 @@ func NewJWTMAKER(secretKey string) (Maker, error) {
 	return &JWTMAKER{secretKey}, nil
 }
 
-// CreateToken creates a new token for a specific username and duration
-func (maker *JWTMAKER) CreateToken(phoneNumber string, duration time.Duration) (string, error) {
-	payload, err := NewPayload(phoneNumber, duration)
+func (maker *JWTMAKER) CreateToken(phoneNumber string, userID uint, duration time.Duration) (string, error) {
+	payload, err := NewPayload(phoneNumber, userID, duration)
 	if err != nil {
 		return "", err
 	}
@@ -30,7 +28,6 @@ func (maker *JWTMAKER) CreateToken(phoneNumber string, duration time.Duration) (
 	return jwtToken.SignedString([]byte(maker.secretKey))
 }
 
-// VerifyToken checks if the token is valid or not
 func (maker *JWTMAKER) VerifyToken(token string) (*Payload, error) {
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {

@@ -14,7 +14,6 @@ import (
 func InitLogger() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	// Set the log output to the console
 	log.Logger = log.Output(zerolog.ConsoleWriter{
 		Out:        os.Stderr,
 		TimeFormat: time.RFC3339Nano,
