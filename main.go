@@ -6,12 +6,15 @@ import (
 	"os"
 	"spam-search/pkg/config"
 	"spam-search/pkg/db"
+	"spam-search/pkg/logger"
 	"spam-search/pkg/server"
 
 	"github.com/rs/zerolog/log"
 )
 
 func main() {
+
+	logger.InitLogger()
 
 	environment := flag.String("e", "development", "")
 

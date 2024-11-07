@@ -3,6 +3,8 @@ package db
 import (
 	"fmt"
 	"spam-search/pkg/config"
+	"spam-search/pkg/contacts"
+	spamreports "spam-search/pkg/spamReports"
 	"spam-search/pkg/users"
 
 	"gorm.io/driver/mysql"
@@ -31,4 +33,6 @@ func (s *sqlConnection) GetDatabse() *gorm.DB {
 
 func (s *sqlConnection) Migrate(development bool) {
 	s.connection.AutoMigrate(&users.User{})
+	s.connection.AutoMigrate(&contacts.Contact{})
+	s.connection.AutoMigrate(&spamreports.SpamReport{})
 }
